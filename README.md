@@ -1,4 +1,4 @@
-# secrets_java
+# Secrets with Postgres instead of Moongose
 Secrets lesson 35 Anggela Yu Udemy THE WEB DEVELOPMENT BOOTCAMP 2024
 
 https://www.udemy.com/course/the-complete-web-development-bootcamp/
