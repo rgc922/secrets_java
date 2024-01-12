@@ -116,6 +116,23 @@ const User = sequelize.define('auth2', {
 
 });
 
+
+
+const SecretsDB = sequelize.define("secrets", {
+  secret: {
+    type: DataTypes.STRING,
+    // allowNull: false
+  },
+  userid: {
+    type: DataTypes.INTEGER,
+    // allowNull: false
+  },
+}, {
+  timestamps: false // by default User have date and time but my table doesn't have those
+});
+
+
+
 // console.log(User === sequelize.models.auth2); // true
 
 passport.use(new LocalStrategy( 
@@ -194,7 +211,7 @@ passport.use(new GoogleStrategy({
             googleid: profile.id,
             username: profile.emails[0].value          
             });
-          console.log("User created ",user);
+          // console.log("User created ",user);
           return done(null, user);
         } catch (err) {
           console.log(err);
@@ -251,7 +268,7 @@ passport.use(new FacebookStrategy({
   },
   async function verify(accessToken, refreshToken, profile, done) {
 
-    console.log(profile.id);
+    // console.log(profile.id);
 
     try {
 
@@ -264,7 +281,7 @@ passport.use(new FacebookStrategy({
             facebookid: profile.id,
             username: profile.displayName,         
             });
-          console.log("User created ",user);
+          // console.log("User created ",user);
           return done(null, user);
         } catch (err) {
           console.log(err);
@@ -365,16 +382,27 @@ app.post('/register', async (req, res) => {
 });
 
 
-app.get("/secrets", function(req, res) {
+app.get("/secrets", async function(req, res) {
 
   // console.log("Secrest RGC", req.isAuthenticated());
 
-  if (req.isAuthenticated()) {
-    res.render("secrets");
-  } else {
-    res.redirect("/login");
-  }
+    try {
+      
+      const secrets = await SecretsDB.findAll();
+      console.log(secrets);
 
+  
+
+      res.render("secrets", { secrets: secrets });
+
+    } catch (err) {
+      console.log(err);
+      redirect("/")
+    }
+
+
+    
+ 
 });
 
 app.get('/logout', function(req, res, next) {
@@ -382,6 +410,47 @@ app.get('/logout', function(req, res, next) {
     if (err) { return next(err); }
     res.redirect('/');
   });
+});
+
+
+
+
+app.get("/submit", function(req, res) {
+  if (req.isAuthenticated()) {
+    res.render("submit");
+  } else {
+    res.redirect("/login");
+  }
+});
+
+
+app.post("/submit", function(req, res){
+
+  const submittedSecret = req.body.secret;
+
+  console.log("REQ USER RGC ",req.user);
+
+  // Check the user id
+
+  User.findByPk(req.user.id).then(user => {
+    if (user) {
+        const Secret =  SecretsDB.create({
+          secret: submittedSecret,
+          userid: user.id          
+          });
+
+          res.redirect("/secrets");
+    } else {
+      res.redirect("/login"); // or handle invalid user
+    }
+  }).catch(error => {
+  res.redirect("/register");
+});
+
+
+
+  // res.redirect("/secrets");
+
 });
 
  
